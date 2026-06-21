@@ -1,0 +1,146 @@
+<div class="page-header">
+  <h2>Parking Finder Thessaloniki</h2>
+  <p>Find parking spaces in Thessaloniki.</p>
+</div>
+
+<div class="toolbar">
+
+  <!-- Search -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+
+    <input
+      type="text"
+      placeholder="Search by name or address..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()"
+      [disabled]="isNearbyMode"
+    />
+  </div>
+
+  <!-- Radius -->
+  <select [(ngModel)]="radius">
+    <option [ngValue]="null" disabled selected>
+      Select radius
+    </option>
+    <option [ngValue]="250">250 m</option>
+    <option [ngValue]="500">500 m</option>
+    <option [ngValue]="750">750 m</option>
+    <option [ngValue]="1000">1 km</option>
+    <option [ngValue]="2000">2 km</option>
+  </select>
+
+  <!-- Free filter -->
+  <label class="free-toggle">
+    <input
+      type="checkbox"
+      [(ngModel)]="showOnlyFree"
+      (change)="toggleFree()" />
+    <span>Free only</span>
+  </label>
+
+  <!-- Actions -->
+  <button class="nearby-button" (click)="findNearby()">
+    📍 Near Me
+  </button>
+
+  <button
+    *ngIf="isNearbyMode"
+    class="secondary-button"
+    (click)="showAll()">
+    Show All
+  </button>
+
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading">
+  Loading...
+</div>
+
+<!-- Empty -->
+<div
+  *ngIf="!loading && !isNearbyMode && parkings.length === 0"
+  class="empty-state">
+  No parkings found.
+</div>
+
+<div
+  *ngIf="!loading && isNearbyMode && nearbyParkings.length === 0"
+  class="empty-state">
+  No nearby parkings found.
+</div>
+
+<!-- Titles -->
+<h3 *ngIf="!loading && !isNearbyMode" class="section-title">
+  All Parkings ({{ parkings.length }})
+</h3>
+
+<h3 *ngIf="!loading && isNearbyMode" class="section-title">
+  Nearby Parkings ({{ nearbyParkings.length }})
+</h3>
+
+<!-- NORMAL MODE -->
+<div class="grid" *ngIf="!loading && !isNearbyMode">
+
+  <div class="card" *ngFor="let p of parkings">
+
+    <div class="card-header">
+      <h3>{{ p.name }}</h3>
+
+      <span class="badge" [class.free]="p.isFree" [class.paid]="!p.isFree">
+        {{ p.isFree ? 'Free' : 'Paid' }}
+      </span>
+    </div>
+
+    <p class="address">📍 {{ p.address }}</p>
+    <p class="type">🚗 {{ p.parkingType }}</p>
+
+    <div class="footer">
+      <a *ngIf="p.website" [href]="p.website" target="_blank">
+        Website
+      </a>
+
+      <span *ngIf="p.phone">
+        📞 {{ p.phone }}
+      </span>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- NEARBY MODE -->
+<div class="grid" *ngIf="!loading && isNearbyMode">
+
+  <div class="card" *ngFor="let item of nearbyParkings">
+
+    <div class="card-header">
+      <h3>{{ item.parking.name }}</h3>
+
+      <span class="distance">
+        {{ item.distanceMeters | number:'1.0-0' }} m
+      </span>
+    </div>
+
+    <p class="address">📍 {{ item.parking.address }}</p>
+    <p class="type">🚗 {{ item.parking.parkingType }}</p>
+
+    <div class="footer">
+
+      <a
+        *ngIf="item.parking.website"
+        [href]="item.parking.website"
+        target="_blank">
+        Website
+      </a>
+
+      <span *ngIf="item.parking.phone">
+        📞 {{ item.parking.phone }}
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
