@@ -9,13 +9,8 @@
   <div class="search-bar">
     <span class="search-icon">🔍</span>
 
-    <input
-      type="text"
-      placeholder="Search by name or address..."
-      [(ngModel)]="searchTerm"
-      (input)="onSearch()"
-      [disabled]="isNearbyMode"
-    />
+    <input type="text" placeholder="Search by name or address..." [(ngModel)]="searchTerm" (input)="onSearch()"
+      [disabled]="isNearbyMode" />
   </div>
 
   <!-- Radius -->
@@ -32,10 +27,7 @@
 
   <!-- Free filter -->
   <label class="free-toggle">
-    <input
-      type="checkbox"
-      [(ngModel)]="showOnlyFree"
-      (change)="toggleFree()" />
+    <input type="checkbox" [(ngModel)]="showOnlyFree" (change)="toggleFree()" />
     <span>Free only</span>
   </label>
 
@@ -44,10 +36,7 @@
     📍 Near Me
   </button>
 
-  <button
-    *ngIf="isNearbyMode"
-    class="secondary-button"
-    (click)="showAll()">
+  <button *ngIf="isNearbyMode" class="secondary-button" (click)="showAll()">
     Show All
   </button>
 
@@ -59,17 +48,15 @@
 </div>
 
 <!-- Empty -->
-<div
-  *ngIf="!loading && !isNearbyMode && parkings.length === 0"
-  class="empty-state">
+<div *ngIf="!loading && !isNearbyMode && parkings.length === 0" class="empty-state">
   No parkings found.
 </div>
 
-<div
-  *ngIf="!loading && isNearbyMode && nearbyParkings.length === 0"
-  class="empty-state">
+<div *ngIf="!loading && isNearbyMode && nearbyParkings.length === 0" class="empty-state">
   No nearby parkings found.
 </div>
+
+<div id="map" class="map"></div>
 
 <!-- Titles -->
 <h3 *ngIf="!loading && !isNearbyMode" class="section-title">
@@ -83,7 +70,7 @@
 <!-- NORMAL MODE -->
 <div class="grid" *ngIf="!loading && !isNearbyMode">
 
-  <div class="card" *ngFor="let p of parkings">
+  <div class="card" *ngFor="let p of parkings" (click)="focusParking(p)">
 
     <div class="card-header">
       <h3>{{ p.name }}</h3>
@@ -113,7 +100,7 @@
 <!-- NEARBY MODE -->
 <div class="grid" *ngIf="!loading && isNearbyMode">
 
-  <div class="card" *ngFor="let item of nearbyParkings">
+  <div class="card" *ngFor="let item of nearbyParkings" (click)="focusNearbyParking(item)">
 
     <div class="card-header">
       <h3>{{ item.parking.name }}</h3>
@@ -128,10 +115,7 @@
 
     <div class="footer">
 
-      <a
-        *ngIf="item.parking.website"
-        [href]="item.parking.website"
-        target="_blank">
+      <a *ngIf="item.parking.website" [href]="item.parking.website" target="_blank">
         Website
       </a>
 

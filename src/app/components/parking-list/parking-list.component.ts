@@ -8,6 +8,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
+import * as L from 'leaflet';
+
 import { ParkingService } from '../../services/parking.service';
 import { Parking } from '../../models/parking.model';
 import { NearbyParking } from '../../models/nearby-parking.model';
@@ -34,10 +36,14 @@ export class ParkingListComponent implements OnInit {
   nearbyParkings: NearbyParking[] = [];
   isNearbyMode: boolean = false;
 
+  private map!: L.Map;
+  private markers: L.Marker[] = [];
+  private markerMap = new Map<string, L.Marker>();
+
   constructor(
     private parkingService: ParkingService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadAllParkings();
@@ -52,6 +58,12 @@ export class ParkingListComponent implements OnInit {
         this.applyFilters();
 
         this.loading = false;
+
+        setTimeout(() => {
+          this.initializeMap();
+          this.updateMap();
+        });
+
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
@@ -86,11 +98,13 @@ export class ParkingListComponent implements OnInit {
 
   onSearch(): void {
     this.applyFilters();
+    this.updateMap();
     this.cdr.detectChanges();
   }
 
   toggleFree(): void {
     this.applyFilters();
+    this.updateMap();
     this.cdr.detectChanges();
   }
 
@@ -122,6 +136,7 @@ export class ParkingListComponent implements OnInit {
               this.isNearbyMode = true;
 
               this.loading = false;
+              this.updateMap();
               this.cdr.detectChanges();
             },
             error: (err: HttpErrorResponse) => {
@@ -149,7 +164,115 @@ export class ParkingListComponent implements OnInit {
     this.isNearbyMode = false;
 
     this.applyFilters();
+    this.updateMap();
 
     this.cdr.detectChanges();
+  }
+
+  focusParking(p: Parking): void {
+    const key = `${p.latitude}-${p.longitude}`;
+    const marker = this.markerMap.get(key);
+
+    if (!marker) return;
+
+    this.map.setView(marker.getLatLng(), 17);
+    marker.openPopup();
+  }
+
+  focusNearbyParking(item: NearbyParking): void {
+    const key = `${item.parking.latitude}-${item.parking.longitude}`;
+    const marker = this.markerMap.get(key);
+
+    if (!marker) return;
+
+    this.map.setView(marker.getLatLng(), 17);
+    marker.openPopup();
+  }
+
+  private initializeMap(): void {
+    if (this.map) {
+      return;
+    }
+
+    this.map = L.map('map').setView(
+      [40.6401, 22.9444],
+      13
+    );
+
+    L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution: '© OpenStreetMap contributors'
+      }
+    ).addTo(this.map);
+  }
+
+  private updateMap(): void {
+
+    if (!this.map) {
+      return;
+    }
+
+    // Remove old markers
+    this.markers.forEach(marker => marker.remove());
+    this.markers = [];
+
+    // Coordinates for fitBounds()
+    const bounds: L.LatLngTuple[] = [];
+
+    if (this.isNearbyMode) {
+
+      this.nearbyParkings.forEach(item => {
+
+        const marker = L.marker([
+          item.parking.latitude,
+          item.parking.longitude
+        ])
+          .addTo(this.map)
+          .bindPopup(`
+        <strong>${item.parking.name}</strong><br>
+        ${Math.round(item.distanceMeters)} m away
+      `);
+
+        this.markers.push(marker);
+        const key = `${item.parking.latitude}-${item.parking.longitude}`;
+        this.markerMap.set(key, marker);
+
+        bounds.push([
+          item.parking.latitude,
+          item.parking.longitude
+        ]);
+      });
+
+    } else {
+
+      this.parkings.forEach(p => {
+
+        const marker = L.marker([
+          p.latitude,
+          p.longitude
+        ])
+          .addTo(this.map)
+          .bindPopup(`
+        <strong>${p.name}</strong><br>
+        ${p.address}
+      `);
+
+        this.markers.push(marker);
+        const key = `${p.latitude}-${p.longitude}`;
+        this.markerMap.set(key, marker);
+
+        bounds.push([
+          p.latitude,
+          p.longitude
+        ]);
+      });
+    }
+
+    if (bounds.length > 0) {
+      this.map.fitBounds(bounds, {
+        padding: [40, 40]
+      });
+    }
   }
 }
