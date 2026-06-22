@@ -331,11 +331,22 @@ h1 {
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 24px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 768px) {
   .map {
     height: 300px;
   }
+}
+
+.active-card {
+  border: 2px solid #2563eb;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.15),
+    0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.card {
+  cursor: pointer;
 }

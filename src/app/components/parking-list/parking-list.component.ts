@@ -40,8 +40,8 @@ export class ParkingListComponent implements OnInit {
   radius: number | null = null;
 
   showOnlyFree: boolean = false;
-
   loading: boolean = true;
+  selectedParkingKey: string | null = null;
 
   allParkings: Parking[] = [];
   parkings: Parking[] = [];
@@ -122,7 +122,6 @@ export class ParkingListComponent implements OnInit {
   }
 
   findNearby(): void {
-
     if (!this.radius) {
       alert('Please select a radius first.');
       return;
@@ -134,6 +133,7 @@ export class ParkingListComponent implements OnInit {
     }
 
     this.loading = true;
+    this.selectedParkingKey = null;
 
     navigator.geolocation.getCurrentPosition(
       (position: GeolocationPosition) => {
@@ -169,12 +169,11 @@ export class ParkingListComponent implements OnInit {
   }
 
   showAll(): void {
-
     this.searchTerm = '';
     this.radius = null;
     this.showOnlyFree = false;
-
     this.isNearbyMode = false;
+    this.selectedParkingKey = null;
 
     this.applyFilters();
     this.updateMap();
@@ -183,23 +182,44 @@ export class ParkingListComponent implements OnInit {
   }
 
   focusParking(p: Parking): void {
-    const key = `${p.latitude}-${p.longitude}`;
+    const key = this.getParkingKey(
+      p.latitude,
+      p.longitude
+    );
+
+    this.selectedParkingKey = key;
+
     const marker = this.markerMap.get(key);
 
     if (!marker) return;
 
-    this.map.setView(marker.getLatLng(), 17);
+    //this.map.setView(marker.getLatLng(), 17);
+    this.map.flyTo(marker.getLatLng(), 17, {
+      duration: 0.5
+    });
     marker.openPopup();
   }
 
   focusNearbyParking(item: NearbyParking): void {
-    const key = `${item.parking.latitude}-${item.parking.longitude}`;
+    const key = this.getParkingKey(
+      item.parking.latitude,
+      item.parking.longitude
+    );
+
+    this.selectedParkingKey = key;
+
     const marker = this.markerMap.get(key);
 
     if (!marker) return;
 
-    this.map.setView(marker.getLatLng(), 17);
+    this.map.flyTo(marker.getLatLng(), 17, {
+      duration: 0.5
+    });
     marker.openPopup();
+  }
+
+  getParkingKey(lat: number, lon: number): string {
+    return `${lat}-${lon}`;
   }
 
   private initializeMap(): void {
@@ -237,6 +257,11 @@ export class ParkingListComponent implements OnInit {
 
       this.nearbyParkings.forEach(item => {
 
+        const key = this.getParkingKey(
+          item.parking.latitude,
+          item.parking.longitude
+        );
+
         const marker = L.marker([
           item.parking.latitude,
           item.parking.longitude
@@ -247,8 +272,12 @@ export class ParkingListComponent implements OnInit {
         ${Math.round(item.distanceMeters)} m away
       `);
 
+        marker.on('click', () => {
+          this.selectedParkingKey = key;
+          this.cdr.detectChanges();
+        });
+
         this.markers.push(marker);
-        const key = `${item.parking.latitude}-${item.parking.longitude}`;
         this.markerMap.set(key, marker);
 
         bounds.push([
@@ -260,6 +289,7 @@ export class ParkingListComponent implements OnInit {
     } else {
 
       this.parkings.forEach(p => {
+        const key = this.getParkingKey(p.latitude, p.longitude);
 
         const marker = L.marker([
           p.latitude,
@@ -271,8 +301,12 @@ export class ParkingListComponent implements OnInit {
         ${p.address}
       `);
 
+        marker.on('click', () => {
+          this.selectedParkingKey = key;
+          this.cdr.detectChanges();
+        });
+
         this.markers.push(marker);
-        const key = `${p.latitude}-${p.longitude}`;
         this.markerMap.set(key, marker);
 
         bounds.push([

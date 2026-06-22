@@ -70,7 +70,10 @@
 <!-- NORMAL MODE -->
 <div class="grid" *ngIf="!loading && !isNearbyMode">
 
-  <div class="card" *ngFor="let p of parkings" (click)="focusParking(p)">
+  <div class="card" *ngFor="let p of parkings" (click)="focusParking(p)" [class.active-card]="
+    selectedParkingKey ===
+    getParkingKey(p.latitude, p.longitude)
+  ">
 
     <div class="card-header">
       <h3>{{ p.name }}</h3>
@@ -100,7 +103,13 @@
 <!-- NEARBY MODE -->
 <div class="grid" *ngIf="!loading && isNearbyMode">
 
-  <div class="card" *ngFor="let item of nearbyParkings" (click)="focusNearbyParking(item)">
+  <div class="card" *ngFor="let item of nearbyParkings" (click)="focusNearbyParking(item)" [class.active-card]="
+    selectedParkingKey ===
+    getParkingKey(
+      item.parking.latitude,
+      item.parking.longitude
+    )
+  ">
 
     <div class="card-header">
       <h3>{{ item.parking.name }}</h3>
